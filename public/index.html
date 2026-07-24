@@ -1,1 +1,1889 @@
-a
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>新中智查 · 管理后台</title>
+<!-- SheetJS for Excel import/export -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; background: #F5F6FA; color: #333; }
+a { color: inherit; text-decoration: none; }
+
+/* 登录页 */
+.login-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #1F5F4F 0%, #134634 100%); }
+.login-card { background: #fff; border-radius: 16px; padding: 48px 40px; width: 420px; box-shadow: 0 8px 32px rgba(0,0,0,0.1); }
+.login-emblem { width: 110px; height: 78px; margin: 0 auto 16px; border-radius: 39px; background: #fff; padding: 4px; box-shadow: 0 6px 20px rgba(31,95,79,0.2); }
+.login-emblem img { width: 100%; height: 100%; border-radius: 35px; display: block; }
+.login-title { font-size: 24px; font-weight: 700; text-align: center; margin: 16px 0 8px; color: #1F5F4F; }
+.login-sub { font-size: 14px; color: #888; text-align: center; margin-bottom: 28px; }
+.login-tabs { display: flex; gap: 0; margin-bottom: 24px; border: 1px solid #1F5F4F; border-radius: 8px; overflow: hidden; }
+.login-tab { flex: 1; padding: 10px 0; text-align: center; font-size: 14px; color: #1F5F4F; cursor: pointer; transition: all 0.2s; }
+.login-tab.active { background: #1F5F4F; color: #fff; }
+.form-item { margin-bottom: 20px; }
+.form-label { display: block; font-size: 13px; color: #666; margin-bottom: 8px; }
+.form-input { width: 100%; height: 44px; padding: 0 14px; border: 1px solid #E0E0E0; border-radius: 8px; font-size: 14px; outline: none; transition: border-color 0.2s; }
+.form-input:focus { border-color: #1F5F4F; }
+.btn-primary { width: 100%; height: 46px; border: none; border-radius: 23px; background: linear-gradient(135deg, #1F5F4F 0%, #134634 100%); color: #fff; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 12px; }
+.btn-primary:hover { opacity: 0.92; }
+.btn-primary:disabled { background: #A8C9BF; cursor: not-allowed; }
+.tips { font-size: 12px; color: #999; text-align: center; margin-top: 16px; line-height: 1.6; }
+.cloud-status { font-size: 12px; text-align: center; margin-top: 12px; padding: 6px; border-radius: 6px; }
+.cloud-status.ok { background: #E0EDE8; color: #2D7A5F; }
+.cloud-status.err { background: #FFE0E0; color: #C62828; }
+.cloud-status.loading { background: #FFF3E0; color: #FF9800; }
+
+/* 后台布局 */
+.app { display: none; min-height: 100vh; }
+.app.show { display: flex; }
+.sidebar { width: 220px; background: #fff; border-right: 1px solid #E8E8E8; display: flex; flex-direction: column; }
+.logo { padding: 24px 20px; border-bottom: 1px solid #E8E8E8; display: flex; align-items: center; gap: 10px; }
+.logo-icon { font-size: 28px; }
+.logo-text { font-size: 15px; font-weight: 700; color: #333; }
+.nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+.nav-item { display: flex; align-items: center; padding: 12px 20px; font-size: 14px; color: #666; cursor: pointer; transition: all 0.15s; }
+.nav-item:hover { background: #F5F6FA; color: #1F5F4F; }
+.nav-item.active { background: #E0EDE8; color: #1F5F4F; font-weight: 500; border-right: 3px solid #1F5F4F; }
+.nav-icon { margin-right: 10px; font-size: 18px; }
+.logout { padding: 16px 20px; border-top: 1px solid #E8E8E8; font-size: 14px; color: #888; cursor: pointer; }
+.logout:hover { color: #FF5252; }
+
+.main { flex: 1; display: flex; flex-direction: column; }
+.topbar { height: 60px; background: #fff; border-bottom: 1px solid #E8E8E8; display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+.page-title { font-size: 18px; font-weight: 600; }
+.user-info { display: flex; align-items: center; gap: 10px; font-size: 14px; color: #666; }
+.user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #1F5F4F; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 600; }
+.content { flex: 1; padding: 24px; overflow-y: auto; }
+
+/* 卡片 */
+.card { background: #fff; border-radius: 12px; padding: 24px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.card-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+.card-title::before { content: ''; width: 4px; height: 16px; background: #1F5F4F; border-radius: 2px; }
+
+/* 统计 */
+.stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
+.stat-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+.stat-num { font-size: 32px; font-weight: 700; color: #1F5F4F; }
+.stat-label { font-size: 13px; color: #888; margin-top: 4px; }
+.stat-trend { font-size: 12px; color: #2D7A5F; margin-top: 4px; }
+
+/* 表格 */
+.toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.search-input { width: 240px; height: 36px; padding: 0 14px; border: 1px solid #E0E0E0; border-radius: 6px; font-size: 14px; outline: none; }
+.search-input:focus { border-color: #1F5F4F; }
+.btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border: 1px solid #E0E0E0; border-radius: 6px; background: #fff; color: #555; font-size: 14px; cursor: pointer; transition: all 0.15s; }
+.btn:hover { border-color: #1F5F4F; color: #1F5F4F; }
+.btn.primary { background: #1F5F4F; color: #fff; border-color: #1F5F4F; }
+.btn.primary:hover { background: #134634; color: #fff; }
+.btn.danger { color: #FF5252; border-color: #FFD0D0; }
+.btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn.danger:hover { background: #FF5252; color: #fff; border-color: #FF5252; }
+.btn.small { height: 28px; padding: 0 10px; font-size: 12px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 12px; border-bottom: 1px solid #F0F0F0; }
+th { background: #F8F9FB; color: #666; font-weight: 500; font-size: 13px; }
+tr:hover td { background: #FAFBFC; }
+.tag { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; }
+.tag.success { background: #E0EDE8; color: #2D7A5F; }
+.tag.warning { background: #FFF3E0; color: #FF9800; }
+.tag.info { background: #E0EDE8; color: #1F5F4F; }
+.avatar-cell { width: 32px; height: 32px; border-radius: 50%; background: #1F5F4F; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; margin-right: 8px; vertical-align: middle; }
+
+/* 复选框 */
+.cb { width: 16px; height: 16px; border: 2px solid #ccc; border-radius: 4px; cursor: pointer; display: inline-block; vertical-align: middle; position: relative; transition: all 0.15s; }
+.cb.checked { background: #1F5F4F; border-color: #1F5F4F; }
+.cb.checked::after { content: '✓'; position: absolute; top: -2px; left: 1px; color: #fff; font-size: 12px; font-weight: bold; }
+
+/* 弹窗 */
+.modal-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; z-index: 1000; }
+.modal-mask.show { display: flex; }
+.modal { background: #fff; border-radius: 12px; width: 520px; max-width: 90vw; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; }
+.modal-header { padding: 16px 20px; border-bottom: 1px solid #F0F0F0; display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 16px; font-weight: 600; }
+.modal-close { cursor: pointer; color: #999; font-size: 20px; }
+.modal-body { padding: 20px; overflow-y: auto; }
+.modal-footer { padding: 16px 20px; border-top: 1px solid #F0F0F0; display: flex; justify-content: flex-end; gap: 10px; }
+
+/* 消息提示 */
+.toast { position: fixed; top: 30px; left: 50%; transform: translateX(-50%); padding: 10px 20px; border-radius: 6px; color: #fff; font-size: 14px; z-index: 2000; opacity: 0; transition: opacity 0.2s; }
+.toast.show { opacity: 1; }
+.toast.success { background: #2D7A5F; }
+.toast.error { background: #FF5252; }
+.toast.info { background: #1F5F4F; }
+
+/* 上传 */
+.upload-area { border: 2px dashed #A8C9BF; border-radius: 8px; padding: 40px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+.upload-area:hover { border-color: #1F5F4F; background: #F8FBFF; }
+.upload-icon { font-size: 48px; }
+.upload-text { color: #1F5F4F; margin-top: 12px; font-size: 14px; }
+.upload-hint { color: #999; font-size: 12px; margin-top: 4px; }
+
+/* Tab */
+.tabs { display: flex; border-bottom: 1px solid #E8E8E8; margin-bottom: 20px; }
+.tab { padding: 10px 20px; font-size: 14px; color: #666; cursor: pointer; border-bottom: 2px solid transparent; }
+.tab.active { color: #1F5F4F; border-color: #1F5F4F; font-weight: 500; }
+
+/* 进度条 */
+.progress { height: 6px; background: #F0F0F0; border-radius: 3px; overflow: hidden; }
+.progress-bar { height: 100%; background: linear-gradient(90deg, #1F5F4F, #2D7A5F); border-radius: 3px; transition: width 0.3s; }
+
+/* 筛选标签 */
+.filter-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.filter-tag { padding: 6px 14px; font-size: 13px; border-radius: 20px; background: #fff; color: #666; border: 1px solid #E8E8E8; cursor: pointer; }
+.filter-tag.active { background: #1F5F4F; color: #fff; border-color: #1F5F4F; }
+
+/* 项目卡片 */
+.project-card { border: 1px solid #F0F0F0; border-radius: 8px; padding: 16px; margin-bottom: 12px; }
+.project-card.pinned { border-color: #1F5F4F; background: #F8FBF9; }
+.pin-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #1F5F4F; color: #fff; font-size: 11px; margin-left: 8px; }
+.col-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; background: #E0EDE8; color: #1F5F4F; font-size: 12px; margin: 2px; }
+
+/* 预览表格 */
+.preview-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 12px; }
+.preview-table th, .preview-table td { border: 1px solid #E8E8E8; padding: 8px; text-align: center; }
+.preview-table th { background: #E0EDE8; color: #1F5F4F; }
+
+/* 空状态 */
+.empty-state { text-align: center; padding: 60px 20px; color: #999; }
+.empty-state-icon { font-size: 48px; margin-bottom: 12px; }
+
+/* 加载中 */
+.loading-box { text-align: center; padding: 60px 20px; color: #999; }
+.loading-spinner { display: inline-block; width: 36px; height: 36px; border: 3px solid #E0EDE8; border-top-color: #1F5F4F; border-radius: 50%; animation: spin 0.8s linear infinite; margin-bottom: 12px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="loginPage" class="login-page">
+  <div class="login-card">
+    <div class="login-emblem"><img src="logo.png" alt="校徽" /></div>
+    <div class="login-title">新中智查</div>
+    <div class="login-sub">深圳市新安中学（集团）· 管理后台</div>
+    <div id="cloudStatus" class="cloud-status loading">正在连接 API...</div>
+    <div class="login-tabs">
+      <div class="login-tab active" onclick="switchLoginTab('admin')">管理员登录</div>
+      <div class="login-tab" onclick="switchLoginTab('teacher')">教师登录</div>
+    </div>
+    <!-- 管理员登录 -->
+    <div id="adminLoginForm">
+      <div class="form-item">
+        <label class="form-label">管理员账号</label>
+        <input id="loginId" class="form-input" type="text" placeholder="请输入账号" value="admin">
+      </div>
+      <div class="form-item">
+        <label class="form-label">密码</label>
+        <input id="loginPwd" class="form-input" type="password" placeholder="请输入密码" value="admin123">
+      </div>
+      <button class="btn-primary" id="adminLoginBtn" onclick="doAdminLogin()">登 录</button>
+      <div class="tips">默认账号 admin / admin123</div>
+    </div>
+    <!-- 教师登录 -->
+    <div id="teacherLoginForm" style="display:none">
+      <div class="form-item">
+        <label class="form-label">手机号</label>
+        <input id="teacherPhone" class="form-input" type="text" placeholder="请输入11位手机号" maxlength="11">
+      </div>
+      <div class="form-item">
+        <label class="form-label">密码（6位）</label>
+        <input id="teacherPwd" class="form-input" type="password" placeholder="请输入6位密码" maxlength="6">
+      </div>
+      <button class="btn-primary" id="teacherLoginBtn" onclick="doTeacherLogin()">登 录</button>
+      <div class="tips">测试账号：13800000001 / 000001（张老师）<br>测试账号：13800000002 / 000002（李老师）</div>
+    </div>
+  </div>
+</div>
+
+<!-- 后台 -->
+<div id="app" class="app">
+  <aside class="sidebar">
+    <div class="logo">
+      <span class="logo-icon">📚</span>
+      <span class="logo-text" id="logoText">新中智查</span>
+    </div>
+    <!-- 管理员导航 -->
+    <nav class="nav" id="adminNav">
+      <div class="nav-item active" data-page="dashboard" onclick="switchPage('dashboard')"><span class="nav-icon">📊</span>数据概览</div>
+      <div class="nav-item" data-page="teachers" onclick="switchPage('teachers')"><span class="nav-icon">👨‍🏫</span>教师管理</div>
+      <div class="nav-item" data-page="parents" onclick="switchPage('parents')"><span class="nav-icon">👨‍👩‍👧</span>学生管理</div>
+      <div class="nav-item" data-page="import" onclick="switchPage('import')"><span class="nav-icon">📥</span>批量导入</div>
+      <div class="nav-item" data-page="aProjects" onclick="switchPage('aProjects')"><span class="nav-icon">📋</span>查询项目管理</div>
+      <div class="nav-item" data-page="aRecords" onclick="switchPage('aRecords')"><span class="nav-icon">📈</span>查询记录</div>
+      <div class="nav-item" data-page="activities" onclick="switchPage('activities')"><span class="nav-icon">📋</span>接龙活动</div>
+      <div class="nav-item" data-page="logs" onclick="switchPage('logs')"><span class="nav-icon">📝</span>操作日志</div>
+      <div class="nav-item" data-page="settings" onclick="switchPage('settings')"><span class="nav-icon">⚙️</span>系统设置</div>
+    </nav>
+    <!-- 教师导航 -->
+    <nav class="nav" id="teacherNav" style="display:none">
+      <div class="nav-item active" data-page="tDashboard" onclick="switchPage('tDashboard')"><span class="nav-icon">📊</span>教师工作台</div>
+      <div class="nav-item" data-page="tCreateProject" onclick="switchPage('tCreateProject')"><span class="nav-icon">📝</span>创建查询项目</div>
+      <div class="nav-item" data-page="tProjects" onclick="switchPage('tProjects')"><span class="nav-icon">📋</span>管理查询项目</div>
+      <div class="nav-item" data-page="tRecords" onclick="switchPage('tRecords')"><span class="nav-icon">📈</span>查询记录</div>
+      <div class="nav-item" data-page="tStudents" onclick="switchPage('tStudents')"><span class="nav-icon">👨‍👩‍👧</span>学生档案</div>
+      <div class="nav-item" data-page="tActivities" onclick="switchPage('tActivities')"><span class="nav-icon">📋</span>接龙活动</div>
+    </nav>
+    <div class="logout" onclick="doLogout()">🚪 退出登录</div>
+  </aside>
+
+  <main class="main">
+    <div class="topbar">
+      <div class="page-title" id="pageTitle">数据概览</div>
+      <div class="user-info">
+        <div class="user-avatar" id="userAvatar">A</div>
+        <span id="userName">系统管理员</span>
+      </div>
+    </div>
+    <div class="content" id="content"></div>
+  </main>
+</div>
+
+<!-- 弹窗 -->
+<div id="modal" class="modal-mask">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">弹窗</div>
+      <span class="modal-close" onclick="closeModal()">×</span>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+// ========== API 配置 ==========
+// ★ 部署后替换为你的 Vercel API 地址 ★
+var API_BASE = 'https://xinzhi-two.vercel.app/api';
+var apiReady = true; // HTTP API 无需初始化，直接可用
+
+// ========== 全局状态 ==========
+var currentUser = null;
+var userRole = 'admin';
+var loginTab = 'admin';
+var currentPage = 'dashboard';
+var batchMode = false;
+var selectedStudents = [];
+var recordBatchMode = false;
+var selectedRecords = [];
+var projPreviewData = null;
+
+// ========== 数据缓存（从云端加载） ==========
+var data = {
+  teachers: [],
+  students: [],
+  projects: [],
+  records: [],
+  activities: [],
+  logs: []         // 本地数据
+};
+
+// ========== 工具函数 ==========
+function fmtTime(ts) {
+  var d = new Date(ts);
+  var p = function(n) { return n < 10 ? '0'+n : ''+n; };
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+':'+p(d.getSeconds());
+}
+function fmtDate(ts) {
+  var d = new Date(ts);
+  var p = function(n) { return n < 10 ? '0'+n : ''+n; };
+  return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+function maskIdCard(id) {
+  if (!id) return id;
+  id = String(id);
+  if (id.length <= 6) return id.substring(0,1) + '****' + id.substring(id.length-1);
+  if (id.length < 10) return id.substring(0,2) + '****' + id.substring(id.length-2);
+  return id.substring(0,4) + '********' + id.substring(id.length-4);
+}
+function toast(msg, type) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show ' + (type || 'info');
+  setTimeout(function() { t.className = 'toast ' + (type || 'info'); }, 2500);
+}
+function openModal(title, body, footer) {
+  document.getElementById('modalTitle').textContent = title;
+  document.getElementById('modalBody').innerHTML = body;
+  document.getElementById('modalFooter').innerHTML = footer || '';
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal() { document.getElementById('modal').classList.remove('show'); }
+function confirmDialog(msg, cb) {
+  openModal('确认操作', '<p style="padding:8px 0;font-size:14px">' + msg + '</p>',
+    '<button class="btn" onclick="closeModal()">取消</button>' +
+    '<button class="btn primary" id="confirmOk">确定</button>');
+  document.getElementById('confirmOk').onclick = function() { closeModal(); cb(); };
+}
+function addLog(user, action, detail) {
+  data.logs.unshift({ time: fmtTime(Date.now()), user: user, action: action, detail: detail });
+}
+function showLoading(msg) {
+  document.getElementById('content').innerHTML = '<div class="loading-box"><div class="loading-spinner"></div><div id="loadingText">' + (msg || '加载中...') + '</div></div>';
+}
+
+// ========== API 连接检测 ==========
+async function initCloud() {
+  var statusEl = document.getElementById('cloudStatus');
+  try {
+    statusEl.className = 'cloud-status loading';
+    statusEl.textContent = '正在连接 API...';
+    var res = await fetch(API_BASE);
+    var data = await res.json();
+    if (data.success) {
+      apiReady = true;
+      statusEl.className = 'cloud-status ok';
+      statusEl.textContent = '✅ API 已连接';
+      console.log('[API] 连接成功');
+    } else {
+      throw new Error('API 返回异常');
+    }
+  } catch (e) {
+    apiReady = false;
+    statusEl.className = 'cloud-status err';
+    statusEl.textContent = '⚠️ API 连接失败: ' + e.message;
+    console.error('[API] 连接失败:', e);
+  }
+}
+
+// 页面加载时初始化
+window.addEventListener('load', function() {
+  initCloud();
+});
+
+// ========== 加载数据 ==========
+async function loadCloudData() {
+  try {
+    var results = await Promise.all([
+      callApi('getTeachers'),
+      callApi('getStudents'),
+      callApi('getProjects'),
+      callApi('getRecords'),
+      callApi('getActivities')
+    ]);
+    data.teachers = results[0].data || [];
+    data.students = results[1].data || [];
+    data.projects = results[2].data || [];
+    data.records = results[3].data || [];
+    data.activities = results[4].data || [];
+    console.log('[API] 数据加载完成：教师' + data.teachers.length + ' 学生' + data.students.length + ' 项目' + data.projects.length + ' 记录' + data.records.length + ' 活动' + data.activities.length);
+  } catch (e) {
+    console.error('[API] 数据加载失败:', e);
+    toast('数据加载失败: ' + e.message, 'error');
+  }
+}
+
+// ========== API 调用 ==========
+async function callApi(action, params) {
+  var reqData = Object.assign({ action: action }, params || {});
+  console.log('[callApi] 请求:', action);
+  var res = await fetch(API_BASE, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(reqData)
+  });
+  var result = await res.json();
+  console.log('[callApi] 返回:', action, result.success ? '成功' : '失败');
+  if (result && result.success === false) {
+    throw new Error(result.message || '操作失败');
+  }
+  return result;
+}
+
+// ========== 调试测试函数 ==========
+async function testCloud() {
+  console.log('=== API 测试 ===');
+  try {
+    var res = await fetch(API_BASE);
+    var data = await res.json();
+    console.log('API 健康检查:', JSON.stringify(data));
+  } catch (e) {
+    console.error('API 连接失败:', e.message);
+  }
+  try {
+    var teachers = await callApi('getTeachers');
+    console.log('教师数据:', teachers.data.length, '条');
+  } catch (e) {
+    console.error('读取失败:', e.message);
+  }
+  console.log('=== 测试结束 ===');
+}
+window.testCloud = testCloud;
+
+// ========== 刷新当前页面 ==========
+async function refreshPage() {
+  await loadCloudData();
+  switchPage(currentPage);
+}
+
+// ========== 登录 ==========
+function switchLoginTab(tab) {
+  loginTab = tab;
+  document.querySelectorAll('.login-tab').forEach(function(t) { t.classList.remove('active'); });
+  event.target.classList.add('active');
+  document.getElementById('adminLoginForm').style.display = tab === 'admin' ? '' : 'none';
+  document.getElementById('teacherLoginForm').style.display = tab === 'teacher' ? '' : 'none';
+}
+
+async function doAdminLogin() {
+  var id = document.getElementById('loginId').value.trim();
+  var pwd = document.getElementById('loginPwd').value.trim();
+  if (!id || !pwd) { toast('请填写完整', 'error'); return; }
+
+  var btn = document.getElementById('adminLoginBtn');
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+
+  try {
+    var result = await callApi('login', { role: 'admin', adminId: id, adminPassword: pwd });
+    userRole = 'admin';
+    currentUser = result.data;
+    await loadCloudData();
+    enterApp();
+  } catch (e) {
+    toast(e.message || '账号或密码错误', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登 录';
+  }
+}
+
+async function doTeacherLogin() {
+  var phone = document.getElementById('teacherPhone').value.trim();
+  var pwd = document.getElementById('teacherPwd').value.trim();
+  if (phone.length !== 11 || pwd.length !== 6) { toast('请输入11位手机号和6位密码', 'error'); return; }
+
+  var btn = document.getElementById('teacherLoginBtn');
+  btn.disabled = true;
+  btn.textContent = '登录中...';
+
+  try {
+    var result = await callApi('login', { role: 'teacher', phone: phone, password: pwd });
+    userRole = 'teacher';
+    currentUser = result.data;
+    await loadCloudData();
+    enterApp();
+  } catch (e) {
+    toast(e.message || '手机号或密码错误', 'error');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登 录';
+  }
+}
+
+function enterApp() {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  document.getElementById('adminNav').style.display = userRole === 'admin' ? '' : 'none';
+  document.getElementById('teacherNav').style.display = userRole === 'teacher' ? '' : 'none';
+  document.getElementById('userAvatar').textContent = currentUser.name[0];
+  document.getElementById('userName').textContent = currentUser.name + (userRole === 'teacher' ? '（教师）' : '');
+  document.getElementById('logoText').textContent = userRole === 'teacher' ? '新中智查 · 教师端' : '新中智查 · 管理后台';
+  var defaultPage = userRole === 'teacher' ? 'tDashboard' : 'dashboard';
+  switchPage(defaultPage);
+  toast('登录成功', 'success');
+  addLog(currentUser.name, '登录', userRole === 'admin' ? '管理员登录' : '教师登录');
+}
+
+function doLogout() {
+  document.getElementById('app').classList.remove('show');
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('teacherPhone').value = '';
+  document.getElementById('teacherPwd').value = '';
+  currentUser = null;
+  userRole = 'admin';
+  data = { teachers: [], students: [], projects: [], records: [], activities: [], logs: [] };
+}
+
+// ========== 路由 ==========
+function switchPage(page) {
+  currentPage = page;
+  var navId = userRole === 'teacher' ? 'teacherNav' : 'adminNav';
+  var nav = document.getElementById(navId);
+  nav.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+  var item = nav.querySelector('.nav-item[data-page="' + page + '"]');
+  if (item) item.classList.add('active');
+
+  var titles = {
+    dashboard: '数据概览', teachers: '教师管理', parents: '学生管理', import: '批量导入',
+    aProjects: '查询项目管理', aRecords: '查询记录',
+    activities: '接龙活动', logs: '操作日志', settings: '系统设置',
+    tDashboard: '教师工作台', tCreateProject: '创建查询项目', tProjects: '管理查询项目',
+    tRecords: '查询记录', tStudents: '学生档案', tActivities: '接龙活动'
+  };
+  document.getElementById('pageTitle').textContent = titles[page] || '';
+  var c = document.getElementById('content');
+  c.innerHTML = pages[page]();
+  bindEvents(page);
+}
+
+// ========== 页面渲染 ==========
+var pages = {
+  // ===== 管理员页面 =====
+  dashboard: function() {
+    return '<div class="stats-row">' +
+      '<div class="stat-card"><div class="stat-num">'+data.teachers.length+'</div><div class="stat-label">教师账号</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+data.students.length+'</div><div class="stat-label">学生档案</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+data.projects.length+'</div><div class="stat-label">查询项目</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+data.records.length+'</div><div class="stat-label">查询次数</div></div>' +
+      '</div>' +
+      '<div class="card"><div class="card-title">最近操作</div>' +
+      (data.logs.length ? '<table><thead><tr><th>时间</th><th>用户</th><th>操作</th><th>详情</th></tr></thead><tbody>' +
+      data.logs.slice(0,8).map(function(l) { return '<tr><td>'+l.time+'</td><td>'+l.user+'</td><td><span class="tag info">'+l.action+'</span></td><td>'+l.detail+'</td></tr>'; }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📝</div>暂无操作记录</div>') +
+      '</div>';
+  },
+
+  teachers: function() {
+    return '<div class="card"><div class="toolbar">' +
+      '<input class="search-input" placeholder="搜索姓名/手机号/学科" id="searchTeacher" oninput="filterTeacher()">' +
+      '<button class="btn primary" onclick="openAddTeacher()">+ 新增教师</button>' +
+      '<button class="btn" onclick="exportData(\'teachers\')">📤 导出 Excel</button>' +
+      (data.teachers.length ? '<button class="btn danger" onclick="deleteAllTeachers()">🗑 删除全部教师</button>' : '') +
+      '</div>' +
+      (data.teachers.length ? '<table id="teacherTable"><thead><tr><th>教师</th><th>学科</th><th>班级</th><th>手机号</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
+      data.teachers.map(function(t) {
+        return '<tr><td><span class="avatar-cell">'+t.name[0]+'</span>'+t.name+'</td><td>'+(t.subject||'-')+'</td><td>'+(t.className||'-')+'</td><td>'+(t.phone||'-')+'</td>' +
+        '<td><span class="tag success">启用</span></td>' +
+        '<td><button class="btn small" onclick="resetTeacherPwd(\''+t.id+'\')">重置密码</button> <button class="btn small danger" onclick="delTeacher(\''+t.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">👨‍🏫</div>暂无教师数据<br><button class="btn primary" style="margin-top:12px" onclick="openAddTeacher()">+ 新增教师</button></div>') +
+      '</div>';
+  },
+
+  parents: function() {
+    var classList = [];
+    data.students.forEach(function(s) { if (s.className && classList.indexOf(s.className) === -1) classList.push(s.className); });
+    classList.sort();
+    // 按 currentClassFilter 过滤学生
+    var visibleStudents = currentClassFilter
+      ? data.students.filter(function(s) { return s.className === currentClassFilter; })
+      : data.students;
+    return '<div class="card"><div class="toolbar">' +
+      '<input class="search-input" placeholder="搜索姓名/身份证号/班级" id="searchStudent" oninput="filterStudent()">' +
+      '<button class="btn primary" onclick="openAddStudent()">+ 新增学生</button>' +
+      '<button class="btn" onclick="exportData(\'students\')">📤 导出 Excel</button>' +
+      '<button class="btn danger" id="batchDeleteBtn" onclick="batchDeleteStudents()" style="display:none">🗑 批量删除 (<span id="batchCount">0</span>)</button>' +
+      '<button class="btn" onclick="toggleBatchMode()" id="batchToggleBtn">批量管理</button>' +
+      (data.students.length ? '<button class="btn danger" onclick="deleteAllStudents()">🗑 删除全部学生</button>' : '') +
+      '</div>' +
+      '<div class="filter-row">' +
+      '<span class="filter-tag ' + (currentClassFilter === '' ? 'active' : '') + '" onclick="setClassFilter(\'\',event)">全部 (' + data.students.length + ')</span>' +
+      classList.map(function(c) {
+        var cnt = data.students.filter(function(s) { return s.className === c; }).length;
+        return '<span class="filter-tag ' + (currentClassFilter === c ? 'active' : '') + '" onclick="setClassFilter(\'' + c.replace(/'/g, "\\'") + '\',event)">' + c + ' (' + cnt + ')</span>';
+      }).join('') +
+      '</div>' +
+      (visibleStudents.length ? '<table id="studentTable"><thead><tr>' +
+      '<th id="batchTh" style="display:none;width:40px"><span class="cb" id="selectAllCb" onclick="toggleSelectAll()"></span></th>' +
+      '<th>学生</th><th>班级</th><th>身份证号</th><th>操作</th></tr></thead><tbody>' +
+      visibleStudents.map(function(s) {
+        return '<tr data-id="'+s.id+'">' +
+        '<td class="batch-td" style="display:none"><span class="cb" onclick="toggleSelectStudent(\''+s.id+'\')"></span></td>' +
+        '<td><span class="avatar-cell">'+s.name[0]+'</span>'+s.name+'</td>' +
+        '<td>'+(s.className||'-')+'</td><td>'+maskIdCard(s.idCard)+'</td>' +
+        '<td class="action-td"><button class="btn small danger" onclick="delStudent(\''+s.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">👨‍👩‍👧</div>该班级暂无学生数据<br><button class="btn primary" style="margin-top:12px" onclick="openAddStudent()">+ 新增学生</button></div>') +
+      '</div>';
+  },
+
+  import: function() {
+    return '<div class="tabs"><div class="tab active" onclick="switchImportTab(event,\'teacherImport\')">教师导入</div><div class="tab" onclick="switchImportTab(event,\'parentImport\')">学生导入</div></div>' +
+      '<div class="card" id="teacherImport"><div class="card-title">导入教师账号</div>' +
+      '<div class="upload-area" onclick="document.getElementById(\'teacherFile\').click()"><div class="upload-icon">📁</div><div class="upload-text">点击选择 Excel 文件</div><div class="upload-hint" id="teacherFileName">支持 .xlsx / .xls 格式</div></div>' +
+      '<input type="file" id="teacherFile" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this,\'teacherFileName\',\'teacher\')">' +
+      '<div style="margin-top:20px;display:flex;gap:12px"><button class="btn" onclick="downloadTeacherTemplate()">📋 下载模板</button><button class="btn primary" id="importTeacherBtn" onclick="doImport(\'teacher\')" disabled>开始导入</button></div>' +
+      '<div style="margin-top:20px;padding:16px;background:#F8F9FB;border-radius:8px;font-size:13px;color:#666;line-height:1.8"><b>模板字段：</b>姓名（必填）· 手机号（必填，11位）· 学科（必填）· 班级（必填）</div></div>' +
+      '<div class="card" id="parentImport" style="display:none"><div class="card-title">导入学生档案</div>' +
+      '<div class="upload-area" onclick="document.getElementById(\'parentFile\').click()"><div class="upload-icon">📁</div><div class="upload-text">点击选择 Excel 文件</div><div class="upload-hint" id="parentFileName">支持 .xlsx / .xls 格式</div></div>' +
+      '<input type="file" id="parentFile" accept=".xlsx,.xls" style="display:none" onchange="handleImportFile(this,\'parentFileName\',\'parent\')">' +
+      '<div style="margin-top:20px;display:flex;gap:12px"><button class="btn" onclick="downloadParentTemplate()">📋 下载模板</button><button class="btn primary" id="importParentBtn" onclick="doImport(\'parent\')" disabled>开始导入</button></div>' +
+      '<div style="margin-top:20px;padding:16px;background:#F8F9FB;border-radius:8px;font-size:13px;color:#666;line-height:1.8"><b>模板字段：</b>学生姓名（必填）· 身份证号（必填，大陆18位/港澳8-15位字母数字）· 班级（必填）</div></div>';
+  },
+
+  activities: function() {
+    return '<div class="card"><div class="toolbar"><button class="btn primary" onclick="openCreateActivity()">+ 创建接龙</button></div>' +
+      (data.activities.length ? '<table><thead><tr><th>活动名称</th><th>发布教师</th><th>班级</th><th>通知内容</th><th>已接龙</th><th>截止</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
+      data.activities.map(function(a) {
+        var joinedCount = (a.joined || []).length;
+        var contentPreview = (a.content || '').substring(0, 30) + ((a.content || '').length > 30 ? '...' : '');
+        return '<tr><td>'+a.title+'</td><td>'+(a.teacherName||'')+'</td><td>'+(a.className||'')+'</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">'+contentPreview+'</td>' +
+        '<td><span class="tag success">'+joinedCount+'人</span></td>' +
+        '<td>'+(a.deadline||'—')+'</td><td>'+(a.status==='active'?'<span class="tag success">进行中</span>':'<span class="tag info">已结束</span>')+'</td>' +
+        '<td><button class="btn small" onclick="viewActivity(\''+a.id+'\')">查看</button> <button class="btn small danger" onclick="delActivity(\''+a.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📋</div>暂无接龙活动<br><button class="btn primary" style="margin-top:12px" onclick="openCreateActivity()">创建接龙</button></div>') +
+      '</div>';
+  },
+
+  logs: function() {
+    return '<div class="card"><div class="toolbar"><input class="search-input" placeholder="搜索用户/操作" id="searchLog" oninput="filterLog()"><button class="btn" onclick="exportLogs()">导出日志</button></div>' +
+      '<div style="padding:12px;background:#FFF3E0;border-radius:8px;font-size:13px;color:#FF9800;margin-bottom:16px">💡 操作日志为本地数据，仅记录当前会话操作。重启后清空。</div>' +
+      (data.logs.length ? '<table id="logTable"><thead><tr><th>时间</th><th>用户</th><th>操作</th><th>详情</th></tr></thead><tbody>' +
+      data.logs.map(function(l) { return '<tr><td>'+l.time+'</td><td>'+l.user+'</td><td><span class="tag info">'+l.action+'</span></td><td>'+l.detail+'</td></tr>'; }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📝</div>暂无操作记录</div>') +
+      '</div>';
+  },
+
+  settings: function() {
+    return '<div class="card"><div class="card-title">管理员密码</div>' +
+      '<div class="form-item"><label class="form-label">当前密码</label><input type="password" class="form-input" id="oldPwd"></div>' +
+      '<div class="form-item"><label class="form-label">新密码</label><input type="password" class="form-input" id="newPwd" placeholder="至少 8 位"></div>' +
+      '<div class="form-item"><label class="form-label">确认新密码</label><input type="password" class="form-input" id="newPwd2"></div>' +
+      '<button class="btn primary" onclick="changePwd()">保存修改</button></div>' +
+      '<div class="card"><div class="card-title">系统信息</div><table>' +
+      '<tr><td style="width:200px">系统版本</td><td>v3.0.0（云开发版）</td></tr>' +
+      '<tr><td>API 地址</td><td>'+API_BASE+'</td></tr>' +
+      '<tr><td>连接状态</td><td>'+(apiReady?'<span class="tag success">已连接</span>':'<span class="tag warning">未连接</span>')+'</td></tr>' +
+      '<tr><td>教师账号</td><td>'+data.teachers.length+' 个</td></tr>' +
+      '<tr><td>学生档案</td><td>'+data.students.length+' 个</td></tr>' +
+      '<tr><td>查询项目</td><td>'+data.projects.length+' 个</td></tr>' +
+      '<tr><td>查询记录</td><td>'+data.records.length+' 条</td></tr>' +
+      '</table></div>';
+  },
+
+  // ===== 管理员：查询项目管理 =====
+  aProjects: function() {
+    var allProjects = data.projects.slice().sort(function(a,b) {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.createdAt - a.createdAt;
+    });
+    return '<div class="card"><div class="toolbar">' +
+      '<div style="font-size:14px;color:#888">共 ' + allProjects.length + ' 个查询项目（所有教师创建的）</div>' +
+      '</div>' +
+      (allProjects.length ? allProjects.map(function(p) {
+        var teacherName = p.teacherName || '未知教师';
+        return '<div class="project-card'+(p.isPinned?' pinned':'')+'">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<div><b style="font-size:15px">'+p.title+(p.isPinned?'<span class="pin-badge">置顶</span>':'')+'</b>' +
+        '<span style="font-size:12px;color:#1F5F4F;margin-left:8px">👤 '+teacherName+'</span></div>' +
+        '<div style="display:flex;gap:8px">' +
+        '<button class="btn btn-sm" onclick="togglePin(\''+p.id+'\')">'+(p.isPinned?'取消置顶':'置顶')+'</button>' +
+        '<button class="btn btn-sm" onclick="viewProjectDetail(\''+p.id+'\')">查看详情</button>' +
+        '<button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c" onclick="delProject(\''+p.id+'\')">删除</button>' +
+        '</div></div>' +
+        '<div style="font-size:13px;color:#888;margin-bottom:8px">创建时间：'+fmtDate(p.createdAt)+' · '+(p.data?p.data.length:0)+' 名学生数据' + (p.className ? ' · 班级：' + p.className : '') + '</div>' +
+        '<div>'+(p.columns||[]).map(function(c) { return '<span class="col-badge">'+c+'</span>'; }).join('')+'</div>' +
+        '</div>';
+      }).join('') : '<div class="empty-state"><div class="empty-state-icon">📋</div>暂无查询项目</div>') +
+      '</div>';
+  },
+
+  // ===== 管理员：查询记录 =====
+  aRecords: function() {
+    var records = data.records.slice().sort(function(a,b) { return b.queriedAt - a.queriedAt; });
+    var stats = {
+      total: records.length,
+      father: records.filter(function(r){return r.relationship==='爸爸'}).length,
+      mother: records.filter(function(r){return r.relationship==='妈妈'}).length,
+      self: records.filter(function(r){return r.relationship==='本人'}).length
+    };
+    return '<div class="stats-row">' +
+      '<div class="stat-card"><div class="stat-num">'+stats.total+'</div><div class="stat-label">总查询</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+stats.father+'</div><div class="stat-label">爸爸查询</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+stats.mother+'</div><div class="stat-label">妈妈查询</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+stats.self+'</div><div class="stat-label">本人查询</div></div>' +
+      '</div>' +
+      '<div class="card"><div class="toolbar">' +
+      '<div class="filter-row" style="margin-bottom:0">' +
+      '<span class="filter-tag active" onclick="filterRecord(\'\',event)">全部</span>' +
+      data.projects.map(function(p) { return '<span class="filter-tag" onclick="filterRecord(\''+p.id+'\',event)">'+p.title+'</span>'; }).join('') +
+      '</div>' +
+      '<button class="btn" onclick="exportRecords()">📤 导出记录</button>' +
+      '<button class="btn" id="recBatchToggleBtn" onclick="toggleRecordBatchMode()">📋 批量管理</button>' +
+      (records.length ? '<button class="btn" style="color:#e74c3c;border-color:#e74c3c" onclick="clearAllRecords()">🗑 清空全部</button>' : '') +
+      '</div>' +
+      (records.length ? '<table id="recordTable"><thead><tr><th class="rec-batch-th" style="display:none">选</th><th>学生</th><th>关系</th><th>查询项目</th><th>查询时间</th><th class="rec-action-th">操作</th></tr></thead><tbody>' +
+      records.map(function(r) {
+        return '<tr data-pid="'+(r.projectId||'')+'" data-rid="'+r.id+'">' +
+        '<td class="rec-batch-td" style="display:none"><input type="checkbox" class="rec-checkbox" value="'+r.id+'" onchange="toggleRecordSelect(\''+r.id+'\')"></td>' +
+        '<td><span class="avatar-cell">'+(r.studentName||'?')[0]+'</span>'+r.studentName+'</td>' +
+        '<td><span class="tag '+(r.relationship==='爸爸'?'info':r.relationship==='妈妈'?'success':'warning')+'">'+r.relationship+'</span></td>' +
+        '<td>'+r.projectTitle+'</td><td>'+fmtDate(r.queriedAt)+'</td>' +
+        '<td class="rec-action-td"><button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c" onclick="delRecord(\''+r.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📈</div>暂无查询记录</div>') +
+      (recordBatchMode && records.length ? '<div style="margin-top:12px;display:flex;gap:8px">' +
+        '<button class="btn" onclick="toggleRecordSelectAll()" id="recSelectAllBtn">全选</button>' +
+        '<button class="btn primary" style="background:#e74c3c" onclick="deleteSelectedRecords()">删除选中 ('+selectedRecords.length+')</button>' +
+        '</div>' : '') +
+      '</div>';
+  },
+
+  // ===== 教师页面 =====
+  tDashboard: function() {
+    var myProjects = data.projects.filter(function(p) { return p.teacherId === currentUser.id || p.teacherName === currentUser.name; });
+    var allRecords = data.records;
+    var myClassStudents = data.students.filter(function(s) { return s.className === currentUser.className; });
+    return '<div class="stats-row">' +
+      '<div class="stat-card"><div class="stat-num">'+myProjects.length+'</div><div class="stat-label">我的查询项目</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+allRecords.length+'</div><div class="stat-label">总查询次数</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+myClassStudents.length+'</div><div class="stat-label">本班学生</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+data.teachers.length+'</div><div class="stat-label">全校教师</div></div>' +
+      '</div>' +
+      '<div class="card"><div class="card-title">我的查询项目</div>' +
+      (myProjects.length ? '<table><thead><tr><th>项目名称</th><th>数据量</th><th>创建时间</th><th>状态</th></tr></thead><tbody>' +
+      myProjects.map(function(p) {
+        return '<tr><td>'+p.title+(p.isPinned?'<span class="pin-badge">置顶</span>':'')+'</td><td>'+(p.data?p.data.length:0)+' 人</td><td>'+fmtDate(p.createdAt)+'</td><td>'+(p.isPublished?'<span class="tag success">已发布</span>':'<span class="tag warning">未发布</span>')+'</td></tr>';
+      }).join('') + '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📋</div>暂无查询项目<br><button class="btn primary" style="margin-top:12px" onclick="switchPage(\'tCreateProject\')">去创建</button></div>') +
+      '</div>' +
+      '<div class="card"><div class="card-title">最近查询记录</div>' +
+      (allRecords.length ? '<table><thead><tr><th>学生</th><th>关系</th><th>查询项目</th><th>时间</th></tr></thead><tbody>' +
+      allRecords.slice(0,8).map(function(r) {
+        return '<tr><td>'+r.studentName+'</td><td>'+r.relationship+'</td><td>'+r.projectTitle+'</td><td>'+fmtDate(r.queriedAt)+'</td></tr>';
+      }).join('') + '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📊</div>暂无查询记录</div>') +
+      '</div>';
+  },
+
+  tCreateProject: function() {
+    return '<div class="card"><div class="card-title">创建查询项目</div>' +
+      '<div class="form-item"><label class="form-label">项目标题</label><input class="form-input" id="projTitle" placeholder="如：期中考试成绩" maxlength="30"></div>' +
+      '<div class="upload-area" onclick="document.getElementById(\'projFile\').click()"><div class="upload-icon">📊</div><div class="upload-text">点击选择 Excel 文件</div><div class="upload-hint" id="projFileName">第一列姓名，后续列自定义</div></div>' +
+      '<input type="file" id="projFile" accept=".xlsx,.xls" style="display:none" onchange="handleProjFile(this)">' +
+      '<div id="projPreview" style="margin-top:20px"></div>' +
+      '<div style="margin-top:20px"><button class="btn primary" id="createProjBtn" onclick="createProject()" disabled>创建项目</button></div>' +
+      '</div>' +
+      '<div class="card"><div class="card-title">Excel 格式说明</div>' +
+      '<table class="preview-table"><thead><tr><th>姓名</th><th>语文</th><th>数学</th><th>英语</th><th>...</th></tr></thead><tbody>' +
+      '<tr><td>王明</td><td>118</td><td>135</td><td>128</td><td>...</td></tr>' +
+      '<tr><td>李华</td><td>110</td><td>142</td><td>115</td><td>...</td></tr>' +
+      '</tbody></table>' +
+      '<div style="margin-top:12px;font-size:13px;color:#888">第一列固定为"姓名"，可选列"身份证号"（用于自动匹配学生）。其余列可自定义任意内容（成绩、排名、评语等）。不在系统中的学生将自动添加。</div></div>';
+  },
+
+  tProjects: function() {
+    var myProjects = data.projects.filter(function(p) { return p.teacherId === currentUser.id || p.teacherName === currentUser.name; });
+    myProjects.sort(function(a,b) {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
+      return b.createdAt - a.createdAt;
+    });
+    return '<div class="card"><div class="toolbar"><button class="btn primary" onclick="switchPage(\'tCreateProject\')">+ 创建项目</button></div>' +
+      (myProjects.length ? myProjects.map(function(p) {
+        return '<div class="project-card'+(p.isPinned?' pinned':'')+'">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">' +
+        '<b style="font-size:15px">'+p.title+(p.isPinned?'<span class="pin-badge">置顶</span>':'')+'</b>' +
+        '<div style="display:flex;gap:8px">' +
+        '<button class="btn small" onclick="togglePin(\''+p.id+'\')">'+(p.isPinned?'取消置顶':'置顶')+'</button>' +
+        '<button class="btn small" onclick="viewProjectDetail(\''+p.id+'\')">查看详情</button>' +
+        '<button class="btn small danger" onclick="delProject(\''+p.id+'\')">删除</button>' +
+        '</div></div>' +
+        '<div style="font-size:13px;color:#888;margin-bottom:8px">创建时间：'+fmtDate(p.createdAt)+' · '+(p.data?p.data.length:0)+' 名学生数据</div>' +
+        '<div>'+(p.columns||[]).map(function(c) { return '<span class="col-badge">'+c+'</span>'; }).join('')+'</div>' +
+        '</div>';
+      }).join('') : '<div class="empty-state"><div class="empty-state-icon">📋</div>暂无查询项目<br><button class="btn primary" style="margin-top:12px" onclick="switchPage(\'tCreateProject\')">去创建</button></div>') +
+      '</div>';
+  },
+
+  tRecords: function() {
+    var records = data.records.slice().sort(function(a,b) { return b.queriedAt - a.queriedAt; });
+    var stats = {
+      total: records.length,
+      father: records.filter(function(r){return r.relationship==='爸爸'}).length,
+      mother: records.filter(function(r){return r.relationship==='妈妈'}).length,
+      self: records.filter(function(r){return r.relationship==='本人'}).length
+    };
+    return '<div class="stats-row">' +
+      '<div class="stat-card"><div class="stat-num">'+stats.total+'</div><div class="stat-label">总查询</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+stats.father+'</div><div class="stat-label">爸爸查询</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+stats.mother+'</div><div class="stat-label">妈妈查询</div></div>' +
+      '<div class="stat-card"><div class="stat-num">'+stats.self+'</div><div class="stat-label">本人查询</div></div>' +
+      '</div>' +
+      '<div class="card"><div class="toolbar">' +
+      '<div class="filter-row" style="margin-bottom:0">' +
+      '<span class="filter-tag active" onclick="filterRecord(\'\',event)">全部</span>' +
+      data.projects.map(function(p) { return '<span class="filter-tag" onclick="filterRecord(\''+p.id+'\',event)">'+p.title+'</span>'; }).join('') +
+      '</div>' +
+      '<button class="btn" onclick="exportRecords()">📤 导出记录</button>' +
+      '<button class="btn" id="recBatchToggleBtn" onclick="toggleRecordBatchMode()">📋 批量管理</button>' +
+      (records.length ? '<button class="btn" style="color:#e74c3c;border-color:#e74c3c" onclick="clearAllRecords()">🗑 清空全部</button>' : '') +
+      '</div>' +
+      (records.length ? '<table id="recordTable"><thead><tr><th class="rec-batch-th" style="display:none">选</th><th>学生</th><th>关系</th><th>查询项目</th><th>查询时间</th><th class="rec-action-th">操作</th></tr></thead><tbody>' +
+      records.map(function(r) {
+        return '<tr data-pid="'+(r.projectId||'')+'" data-rid="'+r.id+'">' +
+        '<td class="rec-batch-td" style="display:none"><input type="checkbox" class="rec-checkbox" value="'+r.id+'" onchange="toggleRecordSelect(\''+r.id+'\')"></td>' +
+        '<td><span class="avatar-cell">'+(r.studentName||'?')[0]+'</span>'+r.studentName+'</td>' +
+        '<td><span class="tag '+(r.relationship==='爸爸'?'info':r.relationship==='妈妈'?'success':'warning')+'">'+r.relationship+'</span></td>' +
+        '<td>'+r.projectTitle+'</td><td>'+fmtDate(r.queriedAt)+'</td>' +
+        '<td class="rec-action-td"><button class="btn btn-sm" style="color:#e74c3c;border-color:#e74c3c" onclick="delRecord(\''+r.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📈</div>暂无查询记录</div>') +
+      (recordBatchMode && records.length ? '<div style="margin-top:12px;display:flex;gap:8px">' +
+        '<button class="btn" onclick="toggleRecordSelectAll()" id="recSelectAllBtn">全选</button>' +
+        '<button class="btn primary" style="background:#e74c3c" onclick="deleteSelectedRecords()">删除选中 ('+selectedRecords.length+')</button>' +
+        '</div>' : '') +
+      '</div>';
+  },
+
+  tStudents: function() {
+    // 教师只能看到本班学生
+    var myStudents = currentUser.className
+      ? data.students.filter(function(s) { return s.className === currentUser.className; })
+      : data.students;
+    return '<div class="card"><div class="toolbar">' +
+      '<input class="search-input" placeholder="搜索姓名/身份证号" id="searchStuT" oninput="filterStudentT()">' +
+      '<button class="btn primary" onclick="openAddStudentT()">+ 新增学生</button>' +
+      '<button class="btn" onclick="exportData(\'students\')">📤 导出 Excel</button>' +
+      '<button class="btn" onclick="downloadStuTemplateT()">📋 下载模板</button>' +
+      '<button class="btn" onclick="openStuImportT()">📥 批量导入</button>' +
+      '</div>' +
+      (currentUser.className ? '<div style="margin-bottom:12px;font-size:14px;color:#1F5F4F;font-weight:600">📌 当前班级：' + currentUser.className + '（共 ' + myStudents.length + ' 名学生）</div>' : '') +
+      (myStudents.length ? '<table id="stuTableT"><thead><tr><th>学生</th><th>班级</th><th>身份证号</th><th>操作</th></tr></thead><tbody>' +
+      myStudents.map(function(s) {
+        return '<tr data-class="'+(s.className||'')+'"><td><span class="avatar-cell">'+s.name[0]+'</span>'+s.name+'</td><td>'+(s.className||'-')+'</td><td>'+maskIdCard(s.idCard)+'</td>' +
+        '<td><button class="btn small danger" onclick="delStudentT(\''+s.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">👨‍👩‍👧</div>' + (currentUser.className ? '本班暂无学生数据' : '暂无学生数据') + '<br><button class="btn primary" style="margin-top:12px" onclick="openAddStudentT()">+ 新增学生</button></div>') +
+      '</div>';
+  },
+
+  tActivities: function() {
+    var myActivities = data.activities.filter(function(a) {
+      return a.teacherId === currentUser.id || a.teacherName === currentUser.name;
+    });
+    myActivities.sort(function(a,b) { return b.createdAt - a.createdAt; });
+    return '<div class="card"><div class="toolbar"><button class="btn primary" onclick="openCreateActivity()">+ 创建接龙</button></div>' +
+      (myActivities.length ? '<table><thead><tr><th>活动名称</th><th>班级</th><th>通知内容</th><th>已接龙</th><th>截止</th><th>状态</th><th>操作</th></tr></thead><tbody>' +
+      myActivities.map(function(a) {
+        var joinedCount = (a.joined || []).length;
+        var contentPreview = (a.content || '').substring(0, 30) + ((a.content || '').length > 30 ? '...' : '');
+        return '<tr><td>'+a.title+'</td><td>'+(a.className||'')+'</td>' +
+        '<td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">'+contentPreview+'</td>' +
+        '<td><span class="tag success">'+joinedCount+'人</span></td>' +
+        '<td>'+(a.deadline||'—')+'</td><td>'+(a.status==='active'?'<span class="tag success">进行中</span>':'<span class="tag info">已结束</span>')+'</td>' +
+        '<td><button class="btn small" onclick="viewActivity(\''+a.id+'\')">查看</button> <button class="btn small danger" onclick="delActivity(\''+a.id+'\')">删除</button></td></tr>';
+      }).join('') +
+      '</tbody></table>' : '<div class="empty-state"><div class="empty-state-icon">📋</div>暂无接龙活动<br><button class="btn primary" style="margin-top:12px" onclick="openCreateActivity()">创建接龙</button></div>') +
+      '</div>';
+  }
+};
+
+// ========== 事件绑定 ==========
+function bindEvents(page) {
+  if (page === 'parents') {
+    batchMode = false;
+    selectedStudents = [];
+  }
+}
+
+// ========== 管理员：教师管理 ==========
+function filterTeacher() {
+  var kw = document.getElementById('searchTeacher').value.toLowerCase();
+  document.querySelectorAll('#teacherTable tbody tr').forEach(function(tr) {
+    tr.style.display = tr.textContent.toLowerCase().includes(kw) ? '' : 'none';
+  });
+}
+
+function openAddTeacher() {
+  openModal('新增教师',
+    '<div class="form-item"><label class="form-label">姓名</label><input class="form-input" id="addTName"></div>' +
+    '<div class="form-item"><label class="form-label">手机号</label><input class="form-input" id="addTPhone" maxlength="11" placeholder="11位手机号"></div>' +
+    '<div class="form-item"><label class="form-label">学科</label><input class="form-input" id="addTSubj"></div>' +
+    '<div class="form-item"><label class="form-label">班级</label><input class="form-input" id="addTClass"></div>' +
+    '<div style="font-size:12px;color:#999;margin-top:8px">初始密码为手机号后6位</div>',
+    '<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="addTeacher()">保存</button>');
+}
+
+async function addTeacher() {
+  var name = document.getElementById('addTName').value.trim();
+  var phone = document.getElementById('addTPhone').value.trim();
+  var subject = document.getElementById('addTSubj').value.trim();
+  var className = document.getElementById('addTClass').value.trim();
+  if (!name || !phone || !subject || !className) { toast('请填写完整信息', 'error'); return; }
+  if (phone.length !== 11) { toast('手机号必须11位', 'error'); return; }
+
+  closeModal();
+  showLoading('正在保存...');
+  try {
+    await callApi('addTeacher', { name: name, phone: phone, subject: subject, className: className });
+    await refreshPage();
+    toast('添加成功', 'success');
+    addLog(currentUser.name, '新增教师', name + ' (' + phone + ')');
+  } catch (e) {
+    toast(e.message || '添加失败', 'error');
+    switchPage(currentPage);
+  }
+}
+
+async function resetTeacherPwd(id) {
+  var t = data.teachers.find(function(x) { return x.id === id; });
+  if (!t) return;
+  var newPwd = t.phone ? t.phone.slice(-6) : '123456';
+  confirmDialog('将 ' + t.name + ' 的密码重置为手机号后6位（' + newPwd + '）？', async function() {
+    showLoading('正在重置...');
+    try {
+      await callApi('resetTeacherPassword', { id: id, password: newPwd });
+      await loadCloudData();
+      switchPage(currentPage);
+      toast('密码已重置为：' + newPwd, 'success');
+      addLog(currentUser.name, '重置密码', t.name + ' (' + t.phone + ')');
+    } catch (e) {
+      toast(e.message || '重置失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+async function delTeacher(id) {
+  var t = data.teachers.find(function(x) { return x.id === id; });
+  if (!t) return;
+  confirmDialog('确定删除教师 ' + t.name + '？此操作不可恢复。', async function() {
+    showLoading('正在删除...');
+    try {
+      await callApi('deleteTeacher', { id: id });
+      await refreshPage();
+      toast('已删除', 'success');
+      addLog(currentUser.name, '删除教师', t.name);
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+async function deleteAllTeachers() {
+  confirmDialog('⚠️ 确定删除全部 ' + data.teachers.length + ' 名教师？\n\n此操作不可恢复，请谨慎操作！', async function() {
+    showLoading('正在删除全部教师...');
+    try {
+      await callApi('deleteAllTeachers', {});
+      await refreshPage();
+      toast('已删除全部教师', 'success');
+      addLog(currentUser.name, '删除全部教师', '清空所有教师账号');
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+// ========== 管理员：学生管理 + 批量删除 ==========
+function filterStudent() {
+  var searchInput = document.getElementById('searchStudent');
+  var kw = (searchInput ? searchInput.value : '').toLowerCase();
+  window._lastStudentSearch = kw;
+  // 重新渲染以应用过滤
+  var c = document.getElementById('content');
+  c.innerHTML = pages.parents();
+  // 恢复搜索框
+  var si2 = document.getElementById('searchStudent');
+  if (si2 && window._lastStudentSearch) {
+    si2.value = window._lastStudentSearch;
+  }
+  // 在当前可见行上应用关键词过滤
+  document.querySelectorAll('#studentTable tbody tr').forEach(function(tr) {
+    tr.style.display = tr.textContent.toLowerCase().includes(kw) ? '' : 'none';
+  });
+}
+
+var currentClassFilter = '';
+function setClassFilter(cls, e) {
+  if (e) e.preventDefault && e.preventDefault();
+  currentClassFilter = cls;
+  // 状态驱动重渲染：重新调用 pages.parents()，active 状态和过滤都基于 currentClassFilter
+  var c = document.getElementById('content');
+  c.innerHTML = pages.parents();
+  // 恢复搜索框的值
+  var searchInput = document.getElementById('searchStudent');
+  if (searchInput && window._lastStudentSearch) {
+    searchInput.value = window._lastStudentSearch;
+    filterStudent();
+  }
+}
+
+function openAddStudent() {
+  openModal('新增学生',
+    '<div class="form-item"><label class="form-label">学生姓名</label><input class="form-input" id="addSName"></div>' +
+    '<div class="form-item"><label class="form-label">身份证号</label><input class="form-input" id="addSIdCard" maxlength="20" placeholder="大陆18位/港澳8-15位字母数字"></div>' +
+    '<div class="form-item"><label class="form-label">班级</label><input class="form-input" id="addSClass" placeholder="如：高三(1)班"></div>',
+    '<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="addStudent()">保存</button>');
+}
+
+async function addStudent() {
+  var name = document.getElementById('addSName').value.trim();
+  var idCard = document.getElementById('addSIdCard').value.trim().toUpperCase();
+  var className = document.getElementById('addSClass').value.trim();
+  if (!name || !idCard || !className) { toast('请填写完整信息', 'error'); return; }
+  if (idCard.length < 8) { toast('身份证号至少8位', 'error'); return; }
+
+  closeModal();
+  showLoading('正在保存...');
+  try {
+    await callApi('addStudent', { name: name, idCard: idCard, className: className });
+    await refreshPage();
+    toast('添加成功', 'success');
+    addLog(currentUser.name, '新增学生', name + ' (' + className + ')');
+  } catch (e) {
+    toast(e.message || '添加失败', 'error');
+    switchPage(currentPage);
+  }
+}
+
+async function delStudent(id) {
+  var s = data.students.find(function(x) { return x.id === id; });
+  if (!s) return;
+  confirmDialog('确定删除学生 ' + s.name + '？', async function() {
+    showLoading('正在删除...');
+    try {
+      await callApi('deleteStudent', { id: id });
+      await refreshPage();
+      toast('已删除', 'success');
+      addLog(currentUser.name, '删除学生', s.name);
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+function toggleBatchMode() {
+  batchMode = !batchMode;
+  selectedStudents = [];
+  var btn = document.getElementById('batchToggleBtn');
+  var batchBtn = document.getElementById('batchDeleteBtn');
+  var th = document.getElementById('batchTh');
+  if (!th) return;
+  btn.textContent = batchMode ? '退出批量' : '批量管理';
+  btn.className = batchMode ? 'btn primary' : 'btn';
+  th.style.display = batchMode ? '' : 'none';
+  document.querySelectorAll('#studentTable .batch-td').forEach(function(td) { td.style.display = batchMode ? '' : 'none'; });
+  document.querySelectorAll('#studentTable .action-td').forEach(function(td) { td.style.display = batchMode ? 'none' : ''; });
+  if (batchMode) {
+    batchBtn.style.display = '';
+    updateBatchCount();
+  } else {
+    batchBtn.style.display = 'none';
+    var cb = document.getElementById('selectAllCb');
+    if (cb) cb.classList.remove('checked');
+  }
+}
+
+function toggleSelectAll() {
+  var cb = document.getElementById('selectAllCb');
+  var checked = !cb.classList.contains('checked');
+  cb.classList.toggle('checked');
+  selectedStudents = [];
+  document.querySelectorAll('#studentTable tbody tr').forEach(function(tr) {
+    if (tr.style.display === 'none') return;
+    var id = tr.getAttribute('data-id');
+    var studentCb = tr.querySelector('.cb');
+    if (checked) {
+      studentCb.classList.add('checked');
+      selectedStudents.push(id);
+    } else {
+      studentCb.classList.remove('checked');
+    }
+  });
+  updateBatchCount();
+}
+
+function toggleSelectStudent(id) {
+  var idx = selectedStudents.indexOf(id);
+  var tr = document.querySelector('#studentTable tbody tr[data-id="'+id+'"]');
+  var cb = tr.querySelector('.cb');
+  if (idx > -1) {
+    selectedStudents.splice(idx, 1);
+    cb.classList.remove('checked');
+  } else {
+    selectedStudents.push(id);
+    cb.classList.add('checked');
+  }
+  updateBatchCount();
+}
+
+function updateBatchCount() {
+  var el = document.getElementById('batchCount');
+  if (el) el.textContent = selectedStudents.length;
+  var allVisible = [];
+  document.querySelectorAll('#studentTable tbody tr').forEach(function(tr) {
+    if (tr.style.display !== 'none') allVisible.push(tr.getAttribute('data-id'));
+  });
+  var cb = document.getElementById('selectAllCb');
+  if (cb && allVisible.length > 0 && allVisible.every(function(id) { return selectedStudents.indexOf(id) > -1; })) {
+    cb.classList.add('checked');
+  } else if (cb) {
+    cb.classList.remove('checked');
+  }
+}
+
+async function batchDeleteStudents() {
+  if (!selectedStudents.length) { toast('请先选择学生', 'error'); return; }
+  confirmDialog('确定要删除选中的 ' + selectedStudents.length + ' 名学生吗？此操作不可恢复。', async function() {
+    var count = selectedStudents.length;
+    var ids = selectedStudents.slice();
+    showLoading('正在删除 ' + count + ' 名学生...');
+    try {
+      await callApi('deleteStudents', { ids: ids });
+      await refreshPage();
+      toast('已删除 ' + count + ' 名学生', 'success');
+      addLog(currentUser.name, '批量删除学生', '共 ' + count + ' 名');
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+async function deleteAllStudents() {
+  confirmDialog('⚠️ 确定删除全部 ' + data.students.length + ' 名学生？\n\n此操作不可恢复，请谨慎操作！', async function() {
+    showLoading('正在删除全部学生...');
+    try {
+      await callApi('deleteAllStudents', {});
+      await refreshPage();
+      toast('已删除全部学生', 'success');
+      addLog(currentUser.name, '删除全部学生', '清空所有学生档案');
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+// ========== Excel 导入 ==========
+var importFileData = { teacher: null, parent: null };
+
+function handleImportFile(input, nameId, type) {
+  if (!input.files[0]) return;
+  document.getElementById(nameId).textContent = input.files[0].name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var workbook = XLSX.read(e.target.result, { type: 'array' });
+      var sheet = workbook.Sheets[workbook.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet);
+      importFileData[type] = rows;
+      var btnId = type === 'teacher' ? 'importTeacherBtn' : 'importParentBtn';
+      document.getElementById(btnId).disabled = false;
+      toast('解析成功，共 ' + rows.length + ' 条数据', 'success');
+    } catch (err) {
+      toast('文件解析失败: ' + err.message, 'error');
+      importFileData[type] = null;
+    }
+  };
+  reader.readAsArrayBuffer(input.files[0]);
+}
+
+// 分批导入，避免单次调用数据量过大
+async function batchImport(type, items) {
+  var action = type === 'teacher' ? 'batchAddTeachers' : 'batchAddStudents';
+  var dataKey = type === 'teacher' ? 'teachers' : 'students';
+  var batchSize = 5; // 每批 5 条，避免云函数超时
+  var total = 0;
+  for (var i = 0; i < items.length; i += batchSize) {
+    var batch = items.slice(i, i + batchSize);
+    var res = await callApi(action, (function() {
+      var o = {}; o[dataKey] = batch; return o;
+    })());
+    total += (res.added || batch.length);
+    // 实时更新进度
+    var msg = '正在导入 ' + (i + batch.length) + '/' + items.length + '...';
+    var loadEl = document.getElementById('loadingText');
+    if (loadEl) loadEl.textContent = msg;
+    // 每批之间加 200ms 间隔，避免数据库压力
+    if (i + batchSize < items.length) {
+      await new Promise(function(r) { setTimeout(r, 200); });
+    }
+  }
+  return total;
+}
+
+async function doImport(type) {
+  var rows = importFileData[type];
+  if (!rows || !rows.length) { toast('请先选择有效的Excel文件', 'error'); return; }
+
+  var btnId = type === 'teacher' ? 'importTeacherBtn' : 'importParentBtn';
+  document.getElementById(btnId).disabled = true;
+  document.getElementById(btnId).textContent = '导入中...';
+  showLoading('正在导入 ' + rows.length + ' 条数据...');
+
+  try {
+    var items;
+    if (type === 'teacher') {
+      items = rows.map(function(r) {
+        return {
+          name: String(r['姓名'] || r['name'] || '').trim(),
+          phone: String(r['手机号'] || r['phone'] || '').trim(),
+          subject: String(r['学科'] || r['subject'] || '').trim(),
+          className: String(r['班级'] || r['className'] || '').trim()
+        };
+      }).filter(function(t) { return t.name && t.phone; });
+      if (!items.length) { toast('未找到有效数据，请检查模板格式', 'error'); switchPage(currentPage); return; }
+      var added = await batchImport('teacher', items);
+      await refreshPage();
+      toast('导入成功，共 ' + added + ' 条', 'success');
+      addLog(currentUser.name, '导入教师', '成功导入 ' + added + ' 条');
+    } else {
+      items = rows.map(function(r) {
+        return {
+          name: String(r['学生姓名'] || r['姓名'] || r['name'] || '').trim(),
+          idCard: String(r['身份证号'] || r['idCard'] || '').trim().toUpperCase(),
+          className: String(r['班级'] || r['className'] || '').trim()
+        };
+      }).filter(function(s) { return s.name && s.idCard; });
+      if (!items.length) { toast('未找到有效数据，请检查模板格式', 'error'); switchPage(currentPage); return; }
+      var added2 = await batchImport('parent', items);
+      await refreshPage();
+      toast('导入成功，共 ' + added2 + ' 条', 'success');
+      addLog(currentUser.name, '导入学生', '成功导入 ' + added2 + ' 条');
+    }
+    importFileData[type] = null;
+  } catch (e) {
+    toast(e.message || '导入失败', 'error');
+    switchPage(currentPage);
+  } finally {
+    var btn = document.getElementById(btnId);
+    if (btn) { btn.disabled = false; btn.textContent = '开始导入'; }
+  }
+}
+
+function downloadTeacherTemplate() {
+  var ws = XLSX.utils.json_to_sheet([
+    { '姓名': '张老师', '手机号': '13800000001', '学科': '物理', '班级': '高三(1)班' },
+    { '姓名': '李老师', '手机号': '13800000002', '学科': '数学', '班级': '高三(2)班' }
+  ]);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '教师模板');
+  XLSX.writeFile(wb, '教师账号模板.xlsx');
+  toast('模板已下载', 'success');
+}
+
+function downloadParentTemplate() {
+  var ws = XLSX.utils.json_to_sheet([
+    { '学生姓名': '王明', '身份证号': '440301200501011234', '班级': '高三(1)班' },
+    { '学生姓名': '李华', '身份证号': '440301200502022345', '班级': '高三(1)班' }
+  ]);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '学生模板');
+  XLSX.writeFile(wb, '学生档案模板.xlsx');
+  toast('模板已下载', 'success');
+}
+
+// ========== Excel 导出 ==========
+function exportData(type) {
+  toast('正在生成文件...', 'info');
+  setTimeout(function() {
+    if (type === 'teachers') {
+      var wsData = data.teachers.map(function(t) {
+        return { '姓名': t.name || '', '手机号': t.phone || '', '密码': t.password || '', '学科': t.subject || '', '班级': t.className || '' };
+      });
+      var ws = XLSX.utils.json_to_sheet(wsData);
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, '教师列表');
+      XLSX.writeFile(wb, '教师列表_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    } else if (type === 'students') {
+      var wsData2 = data.students.map(function(s) {
+        return { '姓名': s.name || '', '身份证号': s.idCard || '', '班级': s.className || '' };
+      });
+      var ws2 = XLSX.utils.json_to_sheet(wsData2);
+      var wb2 = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb2, ws2, '学生列表');
+      XLSX.writeFile(wb2, '学生列表_' + new Date().toISOString().slice(0,10) + '.xlsx');
+    }
+    toast('文件已下载', 'success');
+  }, 200);
+}
+
+function exportRecords() {
+  if (!data.records.length) { toast('暂无记录可导出', 'error'); return; }
+  var wsData = data.records.map(function(r) {
+    return { '学生': r.studentName || '', '关系': r.relationship || '', '查询项目': r.projectTitle || '', '查询时间': fmtDate(r.queriedAt) };
+  });
+  var ws = XLSX.utils.json_to_sheet(wsData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '查询记录');
+  XLSX.writeFile(wb, '查询记录_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  toast('文件已下载', 'success');
+}
+
+function exportLogs() {
+  if (!data.logs.length) { toast('暂无日志可导出', 'error'); return; }
+  var wsData = data.logs.map(function(l) {
+    return { '时间': l.time, '用户': l.user, '操作': l.action, '详情': l.detail };
+  });
+  var ws = XLSX.utils.json_to_sheet(wsData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '操作日志');
+  XLSX.writeFile(wb, '操作日志_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  toast('文件已下载', 'success');
+}
+
+function exportProjectData(id) {
+  var p = data.projects.find(function(x) { return x.id === id; });
+  if (!p || !p.data) { toast('无数据可导出', 'error'); return; }
+  var wsData = p.data.map(function(row) {
+    var obj = { '姓名': row.name };
+    (p.columns || []).forEach(function(c) { obj[c] = row.values ? row.values[c] : ''; });
+    return obj;
+  });
+  var ws = XLSX.utils.json_to_sheet(wsData);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, p.title.substring(0, 20));
+  XLSX.writeFile(wb, p.title + '_' + new Date().toISOString().slice(0,10) + '.xlsx');
+  toast('文件已下载', 'success');
+}
+
+// ========== 教师：创建查询项目 ==========
+function handleProjFile(input) {
+  if (!input.files[0]) return;
+  document.getElementById('projFileName').textContent = input.files[0].name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var workbook = XLSX.read(e.target.result, { type: 'array' });
+      var sheet = workbook.Sheets[workbook.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet);
+      if (!rows.length) { toast('Excel文件无数据', 'error'); return; }
+      // 提取列名
+      var columns = Object.keys(rows[0]);
+      projPreviewData = {
+        columns: columns,
+        data: rows
+      };
+      renderProjPreview();
+    } catch (err) {
+      toast('文件解析失败: ' + err.message, 'error');
+    }
+  };
+  reader.readAsArrayBuffer(input.files[0]);
+}
+
+function renderProjPreview() {
+  if (!projPreviewData) return;
+  var p = projPreviewData;
+  var html = '<div style="font-size:14px;font-weight:600;margin-bottom:8px">解析预览（共 ' + p.data.length + ' 条数据）</div>';
+  html += '<table class="preview-table"><thead><tr>';
+  p.columns.forEach(function(c) { html += '<th>'+c+'</th>'; });
+  html += '</tr></thead><tbody>';
+  p.data.slice(0, 10).forEach(function(row) {
+    html += '<tr>';
+    p.columns.forEach(function(c) { html += '<td>'+(row[c]!=null?row[c]:'—')+'</td>'; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  if (p.data.length > 10) html += '<div style="margin-top:8px;font-size:12px;color:#999">仅显示前10条，共' + p.data.length + '条</div>';
+  document.getElementById('projPreview').innerHTML = html;
+  document.getElementById('createProjBtn').disabled = false;
+}
+
+async function createProject() {
+  var title = document.getElementById('projTitle').value.trim();
+  if (!title) { toast('请输入项目标题', 'error'); return; }
+  if (!projPreviewData) { toast('请先上传Excel文件', 'error'); return; }
+
+  // 过滤掉姓名和身份证号列
+  var columns = projPreviewData.columns.filter(function(c) {
+    return c !== '姓名' && c !== 'name' && c !== '身份证号' && c !== '身份证';
+  });
+  var nameCol = projPreviewData.columns.indexOf('姓名') >= 0 ? '姓名' : (projPreviewData.columns.indexOf('name') >= 0 ? 'name' : projPreviewData.columns[0]);
+  var idCardCol = projPreviewData.columns.indexOf('身份证号') >= 0 ? '身份证号' : (projPreviewData.columns.indexOf('身份证') >= 0 ? '身份证' : null);
+
+  // 建立学生姓名→身份证号映射
+  var idCardMap = {};
+  data.students.forEach(function(s) { idCardMap[s.name] = s.idCard; });
+
+  var projectData = [];
+  var newStudents = []; // 不在系统中的学生，需要自动添加
+  projPreviewData.data.forEach(function(row) {
+    var name = String(row[nameCol] || '').trim();
+    // 优先从 Excel 提取身份证号，其次从学生库查找
+    var idCard = idCardCol ? String(row[idCardCol] || '').trim().toUpperCase() : '';
+    if (!idCard && idCardMap[name]) idCard = idCardMap[name];
+    if (!idCard && name) {
+      // 未找到身份证号，记录为新学生（如果有 Excel 中的身份证号就用，否则留空后续手动补）
+      newStudents.push({ name: name, idCard: idCard || '', className: currentUser.className || '' });
+    }
+    var values = {};
+    columns.forEach(function(col) { values[col] = row[col]; });
+    projectData.push({ name: name, idCard: idCard, values: values });
+  });
+
+  showLoading('正在创建项目...');
+  try {
+    // 先自动添加不在系统中的学生（按姓名去重）
+    if (newStudents.length) {
+      var uniqueNew = [];
+      var seen = {};
+      newStudents.forEach(function(s) {
+        if (!seen[s.name] && !idCardMap[s.name]) {
+          seen[s.name] = true;
+          uniqueNew.push(s);
+        }
+      });
+      if (uniqueNew.length) {
+        console.log('[createProject] 自动添加 ' + uniqueNew.length + ' 名新学生');
+        try {
+          await callApi('batchUpsertStudents', { students: uniqueNew });
+        } catch (e) {
+          console.warn('[createProject] 自动添加学生失败（不影响项目创建）:', e.message);
+        }
+      }
+    }
+
+    await callApi('addProject', {
+      title: title,
+      teacherId: currentUser.id,
+      teacherName: currentUser.name,
+      className: currentUser.className || '',
+      columns: columns,
+      data: projectData
+    });
+    await refreshPage();
+    toast('项目创建成功', 'success');
+    addLog(currentUser.name, '创建查询项目', title + '（' + projectData.length + ' 名学生）');
+    switchPage('tProjects');
+  } catch (e) {
+    toast(e.message || '创建失败', 'error');
+    switchPage(currentPage);
+  }
+}
+
+// ========== 教师：管理查询项目 ==========
+async function togglePin(id) {
+  showLoading('正在操作...');
+  try {
+    await callApi('togglePinProject', { id: id });
+    await refreshPage();
+    toast('操作成功', 'success');
+  } catch (e) {
+    toast(e.message || '操作失败', 'error');
+    switchPage(currentPage);
+  }
+}
+
+async function delProject(id) {
+  var p = data.projects.find(function(x) { return x.id === id; });
+  if (!p) return;
+  confirmDialog('删除后家长将无法查询此项目，确定删除「' + p.title + '」？', async function() {
+    showLoading('正在删除...');
+    try {
+      await callApi('deleteProject', { id: id });
+      await refreshPage();
+      toast('已删除', 'success');
+      addLog(currentUser.name, '删除查询项目', p.title);
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+function viewProjectDetail(id) {
+  var p = data.projects.find(function(x) { return x.id === id; });
+  if (!p) return;
+  var html = '<div style="margin-bottom:16px;font-size:14px"><b>'+p.title+'</b>'+(p.isPinned?'<span class="pin-badge">置顶</span>':'')+' · '+(p.data?p.data.length:0)+' 名学生 · '+fmtDate(p.createdAt)+'</div>';
+  html += '<div style="margin-bottom:12px">'+(p.columns||[]).map(function(c) { return '<span class="col-badge">'+c+'</span>'; }).join('')+'</div>';
+  html += '<table class="preview-table"><thead><tr><th>姓名</th>';
+  (p.columns||[]).forEach(function(c) { html += '<th>'+c+'</th>'; });
+  html += '</tr></thead><tbody>';
+  (p.data||[]).forEach(function(row) {
+    html += '<tr><td>'+row.name+'</td>';
+    (p.columns||[]).forEach(function(c) { html += '<td>'+(row.values&&row.values[c]!=null?row.values[c]:'—')+'</td>'; });
+    html += '</tr>';
+  });
+  html += '</tbody></table>';
+  openModal('项目详情 · '+p.title, html, '<button class="btn" onclick="closeModal()">关闭</button><button class="btn primary" onclick="closeModal();exportProjectData(\''+id+'\')">📤 导出数据</button>');
+}
+
+// ========== 教师：查询记录 ==========
+function filterRecord(pid, e) {
+  document.querySelectorAll('.filter-row .filter-tag').forEach(function(t) { t.classList.remove('active'); });
+  e.target.classList.add('active');
+  document.querySelectorAll('#recordTable tbody tr').forEach(function(tr) {
+    if (!pid) { tr.style.display = ''; return; }
+    tr.style.display = tr.getAttribute('data-pid') === pid ? '' : 'none';
+  });
+}
+
+// 单条删除记录
+async function delRecord(id) {
+  var r = data.records.find(function(x) { return x.id === id; });
+  if (!r) return;
+  confirmDialog('确定删除「' + (r.studentName||'') + '」的这条查询记录？此操作不可恢复。', async function() {
+    showLoading('正在删除...');
+    try {
+      await callApi('deleteRecord', { id: id });
+      await refreshPage();
+      toast('已删除', 'success');
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+// 批量管理模式切换
+function toggleRecordBatchMode() {
+  recordBatchMode = !recordBatchMode;
+  selectedRecords = [];
+  var btn = document.getElementById('recBatchToggleBtn');
+  if (!btn) return;
+  btn.textContent = recordBatchMode ? '退出批量' : '📋 批量管理';
+  btn.className = recordBatchMode ? 'btn primary' : 'btn';
+  // 显示/隐藏选择列
+  document.querySelectorAll('.rec-batch-th').forEach(function(th) { th.style.display = recordBatchMode ? '' : 'none'; });
+  document.querySelectorAll('.rec-batch-td').forEach(function(td) { td.style.display = recordBatchMode ? '' : 'none'; });
+  document.querySelectorAll('.rec-action-td').forEach(function(td) { td.style.display = recordBatchMode ? 'none' : ''; });
+  document.querySelectorAll('.rec-action-th').forEach(function(th) { th.style.display = recordBatchMode ? 'none' : ''; });
+  // 显示/隐藏底部操作栏
+  switchPage(currentPage);
+}
+
+// 切换选中
+function toggleRecordSelect(id) {
+  var idx = selectedRecords.indexOf(id);
+  if (idx > -1) {
+    selectedRecords.splice(idx, 1);
+  } else {
+    selectedRecords.push(id);
+  }
+  // 更新计数
+  var counterBtn = document.querySelector('[onclick="deleteSelectedRecords()"]');
+  if (counterBtn) {
+    counterBtn.textContent = '删除选中 (' + selectedRecords.length + ')';
+  }
+  var selectAllBtn = document.getElementById('recSelectAllBtn');
+  if (selectAllBtn) {
+    var visibleCheckboxes = document.querySelectorAll('.rec-checkbox');
+    var allChecked = true;
+    visibleCheckboxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+    selectAllBtn.textContent = allChecked ? '取消全选' : '全选';
+  }
+}
+
+// 全选/取消全选
+function toggleRecordSelectAll() {
+  var checkboxes = document.querySelectorAll('.rec-checkbox');
+  var selectAllBtn = document.getElementById('recSelectAllBtn');
+  var allChecked = true;
+  checkboxes.forEach(function(cb) { if (!cb.checked) allChecked = false; });
+  if (allChecked) {
+    // 取消全选
+    checkboxes.forEach(function(cb) { cb.checked = false; });
+    selectedRecords = [];
+    if (selectAllBtn) selectAllBtn.textContent = '全选';
+  } else {
+    // 全选
+    selectedRecords = [];
+    checkboxes.forEach(function(cb) {
+      cb.checked = true;
+      selectedRecords.push(cb.value);
+    });
+    if (selectAllBtn) selectAllBtn.textContent = '取消全选';
+  }
+  var counterBtn = document.querySelector('[onclick="deleteSelectedRecords()"]');
+  if (counterBtn) {
+    counterBtn.textContent = '删除选中 (' + selectedRecords.length + ')';
+  }
+}
+
+// 批量删除选中
+async function deleteSelectedRecords() {
+  if (!selectedRecords.length) {
+    toast('请先选择记录', 'error');
+    return;
+  }
+  confirmDialog('确定删除选中的 ' + selectedRecords.length + ' 条记录？此操作不可恢复。', async function() {
+    showLoading('正在删除...');
+    try {
+      await callApi('deleteRecords', { ids: selectedRecords });
+      recordBatchMode = false;
+      selectedRecords = [];
+      await refreshPage();
+      toast('已删除', 'success');
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+// 清空全部记录
+async function clearAllRecords() {
+  confirmDialog('⚠️ 确认清空全部查询记录？\n\n此操作不可恢复，请谨慎操作！', async function() {
+    showLoading('正在清空...');
+    try {
+      await callApi('clearRecords', {});
+      await refreshPage();
+      toast('已清空全部记录', 'success');
+    } catch (e) {
+      toast(e.message || '清空失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+// ========== 教师：学生档案 ==========
+function filterStudentT() {
+  var kw = document.getElementById('searchStuT').value.toLowerCase();
+  document.querySelectorAll('#stuTableT tbody tr').forEach(function(tr) {
+    tr.style.display = tr.textContent.toLowerCase().includes(kw) ? '' : 'none';
+  });
+}
+
+function setStuFilter(type, e) {
+  document.querySelectorAll('.filter-row .filter-tag').forEach(function(t) { t.classList.remove('active'); });
+  e.target.classList.add('active');
+  document.querySelectorAll('#stuTableT tbody tr').forEach(function(tr) {
+    if (type === 'all') { tr.style.display = ''; return; }
+    tr.style.display = tr.getAttribute('data-class') === currentUser.className ? '' : 'none';
+  });
+}
+
+// 教师端：新增学生
+function openAddStudentT() {
+  openModal('新增学生',
+    '<div class="form-item"><label class="form-label">学生姓名</label><input class="form-input" id="addSTName"></div>' +
+    '<div class="form-item"><label class="form-label">身份证号</label><input class="form-input" id="addSTIdCard" maxlength="20" placeholder="大陆18位/港澳8-15位字母数字"></div>' +
+    '<div class="form-item"><label class="form-label">班级</label><input class="form-input" id="addSTClass" value="'+(currentUser.className||'')+'" placeholder="如：高三(1)班"></div>',
+    '<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="addStudentT()">保存</button>');
+}
+
+async function addStudentT() {
+  var name = document.getElementById('addSTName').value.trim();
+  var idCard = document.getElementById('addSTIdCard').value.trim().toUpperCase();
+  var className = document.getElementById('addSTClass').value.trim();
+  if (!name || !idCard || !className) { toast('请填写完整信息', 'error'); return; }
+  if (idCard.length < 8) { toast('身份证号至少8位', 'error'); return; }
+
+  closeModal();
+  showLoading('正在保存...');
+  try {
+    await callApi('addStudent', { name: name, idCard: idCard, className: className });
+    await refreshPage();
+    toast('添加成功', 'success');
+    addLog(currentUser.name, '新增学生', name + ' (' + className + ')');
+  } catch (e) {
+    toast(e.message || '添加失败', 'error');
+    switchPage(currentPage);
+  }
+}
+
+// 教师端：删除学生
+async function delStudentT(id) {
+  var s = data.students.find(function(x) { return x.id === id; });
+  if (!s) return;
+  confirmDialog('确定删除学生 ' + s.name + '？', async function() {
+    showLoading('正在删除...');
+    try {
+      await callApi('deleteStudent', { id: id });
+      await refreshPage();
+      toast('已删除', 'success');
+      addLog(currentUser.name, '删除学生', s.name);
+    } catch (e) {
+      toast(e.message || '删除失败', 'error');
+      switchPage(currentPage);
+    }
+  });
+}
+
+// 教师端：下载模板
+function downloadStuTemplateT() {
+  var ws = XLSX.utils.json_to_sheet([
+    { '学生姓名': '王明', '身份证号': '440301200501011234', '班级': currentUser.className || '高三(1)班' },
+    { '学生姓名': '李华', '身份证号': '440301200502022345', '班级': currentUser.className || '高三(1)班' }
+  ]);
+  var wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '学生模板');
+  XLSX.writeFile(wb, '学生档案模板.xlsx');
+  toast('模板已下载', 'success');
+}
+
+// 教师端：批量导入
+var stuImportDataT = null;
+function openStuImportT() {
+  openModal('批量导入学生',
+    '<div class="upload-area" onclick="document.getElementById(\'stuFileT\').click()"><div class="upload-icon">📁</div><div class="upload-text">点击选择 Excel 文件</div><div class="upload-hint" id="stuFileNameT">支持 .xlsx / .xls 格式</div></div>' +
+    '<input type="file" id="stuFileT" accept=".xlsx,.xls" style="display:none" onchange="handleStuImportT(this)">' +
+    '<div id="stuImportPreview" style="margin-top:16px"></div>' +
+    '<div style="margin-top:16px;padding:12px;background:#F8F9FB;border-radius:8px;font-size:13px;color:#666;line-height:1.8"><b>模板字段：</b>学生姓名（必填）· 身份证号（必填）· 班级（必填）<br>支持大陆18位/港澳8-15位字母数字</div>',
+    '<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" id="stuImportBtnT" onclick="doStuImportT()" disabled>开始导入</button>');
+}
+
+function handleStuImportT(input) {
+  if (!input.files[0]) return;
+  document.getElementById('stuFileNameT').textContent = input.files[0].name;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var workbook = XLSX.read(e.target.result, { type: 'array' });
+      var sheet = workbook.Sheets[workbook.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(sheet);
+      stuImportDataT = rows;
+      document.getElementById('stuImportBtnT').disabled = false;
+      document.getElementById('stuImportPreview').innerHTML = '<div style="font-size:13px;color:#2D7A5F">✅ 解析成功，共 ' + rows.length + ' 条数据</div>';
+      toast('解析成功，共 ' + rows.length + ' 条数据', 'success');
+    } catch (err) {
+      document.getElementById('stuImportPreview').innerHTML = '<div style="font-size:13px;color:#FF5252">❌ 文件解析失败: ' + err.message + '</div>';
+      stuImportDataT = null;
+    }
+  };
+  reader.readAsArrayBuffer(input.files[0]);
+}
+
+async function doStuImportT() {
+  if (!stuImportDataT || !stuImportDataT.length) { toast('请先选择有效的Excel文件', 'error'); return; }
+
+  var items = stuImportDataT.map(function(r) {
+    return {
+      name: String(r['学生姓名'] || r['姓名'] || r['name'] || '').trim(),
+      idCard: String(r['身份证号'] || r['idCard'] || '').trim().toUpperCase(),
+      className: String(r['班级'] || r['className'] || '').trim() || (currentUser.className || '')
+    };
+  }).filter(function(s) { return s.name && s.idCard; });
+
+  if (!items.length) { toast('未找到有效数据，请检查模板格式', 'error'); return; }
+
+  document.getElementById('stuImportBtnT').disabled = true;
+  document.getElementById('stuImportBtnT').textContent = '导入中...';
+  closeModal();
+  showLoading('正在导入 ' + items.length + ' 条学生数据...');
+
+  try {
+    var total = 0;
+    var batchSize = 5;
+    for (var i = 0; i < items.length; i += batchSize) {
+      var batch = items.slice(i, i + batchSize);
+      var res = await callApi('batchUpsertStudents', { students: batch });
+      total += (res.added || res.upserted || batch.length);
+      var msg = '正在导入 ' + (i + batch.length) + '/' + items.length + '...';
+      var loadEl = document.getElementById('loadingText');
+      if (loadEl) loadEl.textContent = msg;
+      if (i + batchSize < items.length) {
+        await new Promise(function(r) { setTimeout(r, 200); });
+      }
+    }
+    await refreshPage();
+    toast('导入成功，共处理 ' + total + ' 条', 'success');
+    addLog(currentUser.name, '批量导入学生', '共 ' + items.length + ' 条');
+    stuImportDataT = null;
+  } catch (e) {
+    toast(e.message || '导入失败', 'error');
+    switchPage(currentPage);
+  }
+}
+
+// ========== 通用操作 ==========
+function switchImportTab(e, id) {
+  document.querySelectorAll('.tab').forEach(function(t) { t.classList.remove('active'); });
+  e.target.classList.add('active');
+  document.getElementById('teacherImport').style.display = id === 'teacherImport' ? '' : 'none';
+  document.getElementById('parentImport').style.display = id === 'parentImport' ? '' : 'none';
+}
+
+function changePwd() {
+  var oldP = document.getElementById('oldPwd').value;
+  var newP = document.getElementById('newPwd').value;
+  var newP2 = document.getElementById('newPwd2').value;
+  if (!oldP || !newP || !newP2) { toast('请填写完整', 'error'); return; }
+  if (newP !== newP2) { toast('两次密码不一致', 'error'); return; }
+  if (newP.length < 8) { toast('新密码至少8位', 'error'); return; }
+  toast('密码已更新', 'success');
+  document.getElementById('oldPwd').value = '';
+  document.getElementById('newPwd').value = '';
+  document.getElementById('newPwd2').value = '';
+  addLog(currentUser.name, '修改密码', '管理员密码已更新');
+}
+
+// 接龙活动（本地数据）
+function openCreateActivity() {
+  var defaultClass = currentUser.className || '';
+  openModal('创建接龙活动',
+    '<div class="form-item"><label class="form-label">活动名称</label><input class="form-input" id="actTitle" placeholder="如：高三第二次月考通知"></div>' +
+    '<div class="form-item"><label class="form-label">通知内容</label><textarea class="form-input" id="actContent" rows="4" style="height:auto;padding:10px 14px;line-height:1.6" placeholder="请输入通知正文内容..."></textarea></div>' +
+    '<div class="form-item"><label class="form-label">班级</label><input class="form-input" id="actClass" placeholder="如：高三(1)班" value="' + defaultClass + '"></div>' +
+    '<div class="form-item"><label class="form-label">截止时间</label><input class="form-input" id="actDeadline" type="date"></div>',
+    '<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="createActivity()">创建</button>');
+}
+
+async function createActivity() {
+  var title = document.getElementById('actTitle').value.trim();
+  if (!title) { toast('请输入活动名称', 'error'); return; }
+  var content = document.getElementById('actContent').value || '';
+  var className = document.getElementById('actClass').value || (currentUser.className || '');
+  var deadline = document.getElementById('actDeadline').value || '';
+  var teacherId = currentUser.id || '';
+  var teacherName = currentUser.name || '';
+
+  try {
+    var res = await callApi('addActivity', {
+      title: title,
+      content: content,
+      className: className,
+      deadline: deadline,
+      teacherId: teacherId,
+      teacherName: teacherName,
+      images: []
+    });
+    if (res.success) {
+      data.activities.unshift(res.data);
+      closeModal();
+      switchPage(userRole === 'teacher' ? 'tActivities' : 'activities');
+      toast('创建成功', 'success');
+      addLog(currentUser.name, '创建接龙', title);
+    } else {
+      toast(res.message || '创建失败', 'error');
+    }
+  } catch(e) {
+    toast('创建失败: ' + e.message, 'error');
+  }
+}
+
+function viewActivity(id) {
+  var a = data.activities.find(function(x) { return x.id === id; });
+  if (!a) return;
+  var joined = a.joined || [];
+  var students = data.students.filter(function(s) { return s.className === a.className; });
+  openModal('接龙详情 · ' + a.title,
+    '<div style="margin-bottom:16px"><b>'+(a.className||'未指定班级')+'</b> · 班级 ' + students.length + ' 人 · 已接龙 ' + joined.length + ' 人</div>' +
+    (a.content ? '<div style="margin-bottom:16px;padding:12px;background:#F5F6FA;border-radius:8px;font-size:13px;line-height:1.6">'+a.content+'</div>' : '') +
+    '<table style="font-size:13px"><thead><tr><th>姓名</th><th>关系</th><th>备注</th><th>状态</th></tr></thead><tbody>' +
+    students.map(function(s) {
+      var j = joined.find(function(x) { return x.name === s.name; });
+      return '<tr><td>'+s.name+'</td><td>'+(j?(j.relationship||'—'):'—')+'</td><td>'+(j?(j.remark||'—'):'—')+'</td><td>'+(j?'<span class="tag success">已接龙</span>':'<span class="tag warning">未接龙</span>')+'</td></tr>';
+    }).join('') +
+    '</tbody></table>',
+    '<button class="btn" onclick="closeModal()">关闭</button>');
+}
+
+function closeActivity(id) {
+  confirmDialog('确定关闭接龙？', function() {
+    var a = data.activities.find(function(x) { return x.id === id; });
+    if (a) a.status = 'finished';
+    switchPage(userRole === 'teacher' ? 'tActivities' : 'activities');
+    toast('已关闭', 'success');
+  });
+}
+
+async function delActivity(id) {
+  confirmDialog('确定删除此接龙活动？删除后不可恢复。', async function() {
+    try {
+      await callApi('deleteActivity', { id: id });
+      data.activities = data.activities.filter(function(x) { return x.id !== id; });
+      switchPage(userRole === 'teacher' ? 'tActivities' : 'activities');
+      toast('已删除', 'success');
+    } catch(e) {
+      toast('删除失败: ' + e.message, 'error');
+    }
+  });
+}
+
+function filterLog() {
+  var kw = document.getElementById('searchLog').value.toLowerCase();
+  document.querySelectorAll('#logTable tbody tr').forEach(function(tr) {
+    tr.style.display = tr.textContent.toLowerCase().includes(kw) ? '' : 'none';
+  });
+}
+
+// 回车登录
+document.getElementById('loginId').addEventListener('keydown', function(e) { if (e.key === 'Enter') doAdminLogin(); });
+document.getElementById('loginPwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doAdminLogin(); });
+document.getElementById('teacherPhone').addEventListener('keydown', function(e) { if (e.key === 'Enter') doTeacherLogin(); });
+document.getElementById('teacherPwd').addEventListener('keydown', function(e) { if (e.key === 'Enter') doTeacherLogin(); });
+</script>
+</body>
+</html>
