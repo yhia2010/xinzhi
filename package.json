@@ -1,0 +1,9 @@
+{
+  "name": "xinzhi-query-server",
+  "version": "1.0.0",
+  "description": "新中智查后端 API",
+  "private": true,
+  "dependencies": {
+    "mongodb": "^6.12.0"
+  }
+}
